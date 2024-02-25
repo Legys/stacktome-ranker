@@ -1,4 +1,4 @@
-### Stack tome ranker Scala Spark App
+### Stacktome ranker Scala Spark App
 
 ## Tech assignment
 
