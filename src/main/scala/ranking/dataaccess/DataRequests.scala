@@ -5,6 +5,7 @@ import ranking.MonthlyVisitParser
 import ranking.dataaccess.model.{ReviewResponse, StoreResponse}
 import ranking.domain.{Review, StoreWithReviews}
 
+import java.time.{ZoneId, ZonedDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
@@ -38,6 +39,12 @@ object DataRequests {
 
   private val storesFutures =
     Seq(jewelryStoreRequest, furnitureStoreRequest, clothingStoreRequest)
+  private val startObservationDateTimeUtc: ZonedDateTime = {
+    val serviceStartDateTimeUtc = ZonedDateTime.now(ZoneId.of("UTC"))
+
+    // TODO: move to env variables
+    serviceStartDateTimeUtc.minusMinutes(30)
+  }
 
   private def fetchReviewsByBusiness(
       business: StoreResponse.Business
@@ -85,6 +92,17 @@ object DataRequests {
       monthlyVisits = monthlyVisits
     )
   }
+
+  private def filterReviewsByDate(
+      reviews: Seq[ReviewResponse.Review]
+  ): Seq[ReviewResponse.Review] = {
+    reviews.filter(review =>
+      review.date.createdAt.isAfter(
+        startObservationDateTimeUtc
+      )
+    )
+  }
+
   private def toStoreWithReviews(
       category: String,
       business: StoreResponse.Business,
@@ -100,7 +118,12 @@ object DataRequests {
     response.map {
       case (Right(reviews), Right(traffic)) =>
         Right(
-          createStoreWithReviews(category, business, reviews.reviews, traffic)
+          createStoreWithReviews(
+            category,
+            business,
+            filterReviewsByDate(reviews.reviews),
+            traffic
+          )
         )
       case (Left(error), _) => Left(error)
       case (_, Left(error)) => Left(error)

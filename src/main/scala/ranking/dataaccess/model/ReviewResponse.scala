@@ -1,12 +1,15 @@
 package ranking.dataaccess.model
 
-import io.circe._, io.circe.generic.semiauto._
+import io.circe._
+import io.circe.generic.semiauto._
 import io.circe.generic.auto._
+
+import java.time.ZonedDateTime
 
 object ReviewResponse {
 
   case class Date(
-      createdAt: String
+      createdAt: ZonedDateTime
   )
 
   case class Review(
